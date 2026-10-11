@@ -470,7 +470,9 @@ restrictions on the applications ability to set this value.
 use sendfile = *BOOLEAN* (default: *yes*) **(G)**
 
 > Whether to use sendfile syscall for
-sending file data to clients.
+sending file data to clients. Builds for Linux, FreeBSD, Solaris and
+illumos have it. A file whose filesystem refuses sendfile is sent through a
+buffer.
 
 recvfile = *BOOLEAN* (default: *no*) **(G)**
 
@@ -1497,6 +1499,10 @@ read only = *BOOLEAN* (default: *no*) **(V)**
 
 > Specifies the share as being read only for all users.
 Forces **ea = sys**.
+>
+> A share on a read-only filesystem is reported read only without this
+option; a share whose filesystem refuses writes but is not mounted
+read-only, such as an NFS export that the server makes read-only, needs it.
 
 stat vol = *BOOLEAN* (default: *yes*) **(V)**
 

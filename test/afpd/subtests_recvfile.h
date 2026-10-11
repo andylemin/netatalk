@@ -10,6 +10,7 @@ extern int utest_recvfile_error_drains_request(AFPObj *obj, struct vol *vol);
 extern int utest_recvfile_error_leaves_no_residue(AFPObj *obj, struct vol *vol);
 extern int utest_recvfile_peer_close_ends_write(AFPObj *obj, struct vol *vol);
 extern int utest_write_fork_eof_fails_request(AFPObj *obj, struct vol *vol);
+extern int utest_write_fork_eof_marks_volume(AFPObj *obj, struct vol *vol);
 extern int utest_recvfile_urgent_byte_finishes_write(AFPObj *obj,
                                                      struct vol *vol);
 extern int utest_recvfile_urgent_byte_at_eof(AFPObj *obj, struct vol *vol);

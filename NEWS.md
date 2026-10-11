@@ -40,6 +40,126 @@ Changes in 4.7.0
 * FIX: libatalk: reject AppleDouble sidecars that place the resource fork
   anywhere but offset 82, GitHub #3378
 * UPD: afpd: raise the default 'splice size' to 1 MiB, GitHub #3378
+* FIX: afpd: on Linux, an FPRead reply whose header failed to send went on
+  to send the file data with sendfile, without the header, GitHub #NNNN
+* FIX: afpd: on 32-bit FreeBSD builds, sendfile wrote its 64-bit byte count
+  into a 32-bit variable, GitHub #NNNN
+* FIX: afpd: on 32-bit builds, an FPReadExt reply of 2 GiB or more ended the
+  session once it was sent, GitHub #NNNN
+* BREAKING: libatalk: dsi_stream_read_file() returns 0 or -1 in place of
+  its byte count, GitHub #NNNN
+* BREAKING: libatalk: sys_sendfile() is removed, GitHub #NNNN
+* FIX: afpd: FPReadExt replies stop at 4 GiB less one byte, the DSI frame's
+  limit; a reply of 4 GiB or more announced a wrapped length and desynced
+  the session, and on 32-bit builds reported end of file early; the DSI
+  layer refuses a reply length its header cannot carry, GitHub #NNNN
+* FIX: afpd: a file on a filesystem that refuses sendfile is sent through a
+  buffer; every read of it ended the session, GitHub #NNNN
+* FIX: afpd: FPGetIcon refuses an icon larger than the reply buffer; over
+  AppleTalk such an icon overran the session's reply buffer, GitHub #NNNN
+* UPD: afpd: a 'dircache statistics (offcnt)' line at session close counts
+  folder item count requests, the counts served from the dircache and the
+  folder walks by cause, GitHub #NNNN
+* UPD: testsuite: afp_lantest gains a folder item count row that lists each
+  of twenty folders and then their parent with Finder's bitmaps; -K runs
+  it, GitHub #NNNN
+* FIX: afpd: a hard create over an existing file leaves the folder's item
+  count unchanged; it counted one entry too many until the folder
+  changed, GitHub #NNNN
+* FIX: afpd: a dircache refresh that moves a folder's ctime drops the
+  folder's cached access rights, so FPAccess recomputes them after an
+  external chmod or setfacl instead of serving rights the periodic
+  validation or a sibling session's hint had carried forward, GitHub #NNNN
+* UPD: afpd: a fresh stat of a folder refreshes its dircache entry, so a
+  folder whose cached ctime trails the disk is walked once for its item
+  count rather than on each alternating listing and lookup, GitHub #NNNN
+* FIX: afpd: FPAccess answers a file's delete right from the parent
+  folder's ACL; it read the file's own ACL against the folder's
+  permissions, refusing deletes a writable folder allows and granting them
+  in a read-only folder, GitHub #NNNN
+* FIX: afpd: on a volume with 'vol size limit', bytes written before a
+  usage scan were counted again after it, so the volume reported less free
+  space until the next scan, GitHub #NNNN
+* FIX: afpd: a reply from the resource fork cache was staged 12 or 20 bytes
+  into the command buffer, so a piece of a cached fork of a quantum or more
+  ran past the buffer; replies go out from the cache buffer, GitHub #NNNN
+* FIX: afpd: a resource fork grown since its length was cached ended the
+  session on the next read, and one added since the file was cached kept
+  reporting no resource fork; the fork is read and the cached length
+  dropped, GitHub #NNNN
+* FIX: afpd: the resource fork cache looked files up by the name the client
+  sent, so a file whose name has a decomposed form, such as an accented
+  name from an AFP 3 client, was never served from the cache and its
+  session's own resource fork changes left its cached length in place,
+  GitHub #NNNN
+* FIX: afpd: other sessions kept a resource fork's cached length, dates and
+  bytes until the writer closed the fork, and never heard of a length set by
+  FPSetForkParms alone; an open fork's first change tells them,
+  GitHub #NNNN
+* FIX: afpd: a session could fill its resource fork cache from a fork
+  another session had open for writing and serve those bytes after the
+  writer had changed them; the cache fills only while no other session has
+  the fork open for writing, GitHub #NNNN
+* FIX: afpd: FCE kept the resolved path of every file event; the path is
+  resolved only when `fce ignore directories` is set, and freed,
+  GitHub #NNNN
+* FIX: afpd: a buffered FPRead staged each reply piece 12 or 20 bytes into a
+  buffer of one quantum, so a piece of a full quantum ran past it: on every
+  build without sendfile (all but Linux, FreeBSD and Solaris) and with
+  `use sendfile = no`, GitHub #NNNN
+* FIX: afpd: a buffered FPRead of a fork shorter than its recorded length
+  replied with the previous reply's bytes; it replies with the bytes read
+  and AFPERR_EOF, GitHub #NNNN
+* FIX: afpd: opening a volume and polling its parameters check its
+  read-only state without writing its root, so sessions get volume change
+  notifications for real changes only, GitHub #NNNN
+* UPD: afpd: a share whose filesystem refuses writes but is not mounted
+  read-only, such as an NFS export the server makes read-only, needs
+  'read only = yes' to be reported read only, GitHub #NNNN
+* UPD: afpd: free space on a quota-limited volume is fetched at most once
+  every ten seconds, GitHub #NNNN
+* FIX: afpd: a volume name its 'mac charset' cannot encode fails the
+  volume parameters request instead of overrunning the reply buffer,
+  GitHub #NNNN
+* FIX: afpd: FPGetSrvrParms converts volume names without a heap buffer; a
+  reply that reached its size cap leaked the name it left out, GitHub #NNNN
+* FIX: afpd: FPOpenVol, FPGetExtAttr, FPSetExtAttr and FPRemoveExtAttr fail
+  a name that does not convert from UTF-8 with kFPParamErr, where they ran
+  on a name buffer the conversion had not filled, and FPOpenVol converts
+  the name into the start of its buffer, not past a '+' left in it,
+  GitHub #NNNN
+* FIX: afpd: writing to a fork, setting a fork's length, flushing or closing a
+  written resource fork, exchanging files, setting or removing extended
+  attributes and ACLs, and setting a volume's backup date mark the volume
+  changed, so other sessions are told of these changes as they are of
+  creates, renames and deletes, GitHub #NNNN
+* FIX: afpd: FPSetACL finds the ACL in a request that carries one of the
+  owner and group UUIDs; a request with the group UUID alone failed with
+  kFPMiscErr, GitHub #NNNN
+* UPD: afpd: session close logs an "enumerate statistics" line with the
+  session's directory reads, the rereads of continuation batches and the
+  names read, GitHub #NNNN
+* FIX: afpd: folder listings leave out names longer than 255 bytes, which
+  they saved without a terminator, GitHub #NNNN
+* UPD: afpd: with convert appledouble = yes, a folder listing attempts the
+  conversion of a file only while its folder holds a .AppleDouble, and of
+  a cached folder once, GitHub #NNNN
+* FIX: afpd: a cached file renamed by the conversion of its hex-encoded
+  name keeps its CNID, GitHub #NNNN
+* FIX: afpd: the batch after a failed folder listing batch resumes at its
+  index instead of skipping names, and the batch after a failed read of the
+  folder reads it again instead of walking stale names, GitHub #NNNN
+* UPD: afpd: the names of the eight most recent folder listings stay saved
+  between batches, so a client that lists folders side by side no longer
+  makes afpd read each folder again for every batch, GitHub #NNNN
+* FIX: afpd: a folder listing keeps its numbering when it is read again
+  part-way, asked for an earlier entry, or continued with the other kind
+  of entries, instead of repeating or skipping entries, GitHub #NNNN
+* UPD: afpd: on illumos, Solaris and macOS, and on FreeBSD for a
+  case-insensitive ZFS dataset, a request enters its folder by a walk from
+  the volume's root that refuses symlinks, instead of chdir() and
+  getcwd(), which rebuilt the folder's path from the filesystem,
+  GitHub #NNNN
 
 Changes in 4.6.1
 ----------------

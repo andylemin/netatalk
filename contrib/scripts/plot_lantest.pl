@@ -84,6 +84,7 @@ my @SHORT_LABELS = (
                     ['Mixed cache operations'    => 'Mixed cache'],
                     ['Deep path traversal'       => 'Deep traverse'],
                     ['Cache validation'          => 'Cache validate'],
+                    ['Folder item counts'        => 'Folder counts'],
 );
 
 # Map a verbose test name to a short axis label, falling back to the name with

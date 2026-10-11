@@ -573,6 +573,38 @@ int utest_write_fork_eof_fails_request(AFPObj *obj, struct vol *vol)
 }
 
 /*!
+ * @brief A payload the stream ends before completing marks the volume: the
+ *        bytes that arrived are on disk
+ *
+ * The header announces 1 MiB and 256 KiB arrive before EOF.
+ */
+int utest_write_fork_eof_marks_volume(AFPObj *obj, struct vol *vol)
+{
+    struct rf rf;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+    rf.obj.options.flags &= ~OPTION_RECVFILE;
+
+    if (rf_open(&rf, 0, OPENFORK_DATA)) {
+        rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_A_LEN, 0xA5);
+        vol->v_root_marked = 0;
+
+        if (rf_send(&rf, rf.buf, DSI_FRAME_OVERHEAD_EXT + RF_B_LEN) == 0
+                && rf_write(&rf) == AFPERR_PARAM) {
+            ret = vol->v_root_marked != 0 ? 0 : 1;
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
  * @brief A write with a TCP urgent byte inside its payload finishes through
  *        recv(), which steps over the byte, and the session stays in step
  */
