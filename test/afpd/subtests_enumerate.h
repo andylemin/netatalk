@@ -17,6 +17,7 @@ extern int utest_enumerate_kind_change_rewinds(AFPObj *obj, uint16_t vid);
 extern int utest_enumerate_deleted_name_keeps_index(AFPObj *obj, uint16_t vid);
 extern int utest_movecwd_skips_getcwd(AFPObj *obj, struct vol *vol);
 extern int utest_movecwd_at_descriptor_limit(AFPObj *obj, struct vol *vol);
+extern int utest_movecwd_volume_walks(const struct vol *vol);
 extern int utest_enumerate_long_name_skipped(AFPObj *obj, uint16_t vid);
 
 #endif /* SUBTESTS_ENUMERATE_H */

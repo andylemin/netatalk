@@ -1433,6 +1433,8 @@ int main(int argc, char *argv[])
                      "movecwd: a walking volume skips getcwd()");
     TEST_int_or_skip(utest_movecwd_at_descriptor_limit(&obj, vol), 0,
                      "movecwd: the walk falls back at the descriptor limit");
+    TEST_int_or_skip(utest_movecwd_volume_walks(vol), 0,
+                     "movecwd: macOS, illumos and Solaris volumes walk");
     TEST_int_or_skip(utest_enumerate_long_name_skipped(&obj, vid), 0,
                      "enumerate: names over 255 bytes are left out");
     /* drives a full closevol/openvol cycle on vol and hands it back open */

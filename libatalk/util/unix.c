@@ -656,10 +656,16 @@ int ostatat(int dirfd, const char *path, struct stat *st, int options)
 }
 
 /*!
- * @brief chdir() to dir unless its path holds a symlink, which a getcwd()
+ * @brief chdir() to dir, then report a symlink on its path, which a getcwd()
  *        that differs from dir shows
  *
- * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
+ * dir has to be a canonical path, and a trailing slash is fine. On a return
+ * of 1 the process is already in the symlink target.
+ *
+ * @param[in] dir  absolute directory, or one relative to the current
+ *                 directory
+ * @returns 0, 1 when the path held a symlink or getcwd() failed after the
+ *          change, or -1 when chdir() or the first getcwd() fails
  */
 static int chdir_getcwd(const char *dir)
 {
@@ -759,6 +765,8 @@ static int chdir_getcwd(const char *dir)
  * checks search permission at every step; macOS opens rel at once with
  * O_NOFOLLOW_ANY.
  *
+ * @param[in] rootfd  descriptor of the folder rel starts from
+ * @param[in] rel     relative path below that folder, not empty
  * @returns the descriptor, or -1 with errno set, ELOOP when a component is a
  *          symlink
  */
@@ -819,11 +827,18 @@ static int open_below(int rootfd, const char *rel)
 }
 
 /*!
- * @brief chdir() to dir, rel below the folder rootfd is open on, unless a
- *        component of rel is a symlink
+ * @brief chdir() to dir by a walk from the folder rootfd is open on, and
+ *        report a symlink on the way
  *
- * @returns 0, -1 with errno set as chdir() sets it, or 1 when rel reaches a
- *          folder through a symlink
+ * Through a symlink the call fails where chdir(dir) fails, and otherwise
+ * returns 1 in dir, as chdir_getcwd() does. With no descriptor free it
+ * falls back to chdir_getcwd(dir).
+ *
+ * @param[in] rootfd  descriptor of the folder the walk starts from
+ * @param[in] rel     dir's path below that folder, empty for the folder
+ * @param[in] dir     the same directory's full path
+ * @returns 0, 1 when rel reaches a folder through a symlink, or -1 with
+ *          errno set as chdir() sets it
  */
 static int chdir_below(int rootfd, const char *rel, const char *dir)
 {
@@ -858,13 +873,21 @@ static int chdir_below(int rootfd, const char *rel, const char *dir)
 #endif /* OCHDIR_WALK */
 
 /*!
- * @brief symlink safe chdir replacement
+ * @brief Change the current directory and report a symlink on the way for
+ *        O_NOFOLLOW
  *
- * Only chdirs to dir if it doesn't contain symlinks or if symlink checking
- * is disabled. Given rootfd from ochdir_root(root), a dir below root is
- * entered by a walk from rootfd that refuses symlinks, without getcwd().
+ * Without O_NOFOLLOW the call is a plain chdir(). With it, dir has to be a
+ * canonical path, and a trailing slash is fine: given rootfd from
+ * ochdir_root(root), a dir below root is entered by chdir_below() without
+ * getcwd(), any other by chdir_getcwd().
  *
- * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
+ * @param[in] dir      absolute directory, or one relative to the current
+ *                     directory
+ * @param[in] options  O_NOFOLLOW or 0
+ * @param[in] rootfd   ochdir_root(root), or -1
+ * @param[in] root     the folder rootfd is open on, unused when rootfd is -1
+ * @returns 0, 1 when the path held a symlink or getcwd() failed after the
+ *          change, or -1 when the change fails
  */
 int ochdir(const char *dir, int options, int rootfd, const char *root)
 {
@@ -890,6 +913,9 @@ int ochdir(const char *dir, int options, int rootfd, const char *root)
 /*!
  * @brief The descriptor ochdir() walks from below a volume root
  *
+ * The caller closes the descriptor.
+ *
+ * @param[in] root  the volume root's path
  * @returns root open for search where ochdir() enters the folders below it
  *          without getcwd(), else -1
  */

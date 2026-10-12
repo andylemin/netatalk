@@ -69,6 +69,8 @@ static struct enumerate_stats enumerate_stat;
 
 /*!
  * @brief Copy the session's directory listing counts
+ *
+ * @param[out] out  the counts
  */
 void enumerate_stats_get(struct enumerate_stats *out)
 {
@@ -88,6 +90,8 @@ void enumerate_log_stats(void)
 
 /*!
  * @brief Empty a slot, freeing its names
+ *
+ * @param[in,out] sd  the slot
  */
 static void sd_drop(struct savedir *sd)
 {
@@ -103,6 +107,10 @@ static void sd_drop(struct savedir *sd)
  * The listing sd held is parked first. A directory without a saved listing
  * keeps sd when sd is empty, else takes a parked slot, an empty one before
  * the least recently used, whose names are freed.
+ *
+ * @param[in,out] sd   enumerate()'s listing in use
+ * @param[in]     vid  the directory's volume id
+ * @param[in]     did  the directory's id
  */
 static void sd_select(struct savedir *sd, uint16_t vid, uint32_t did)
 {
@@ -141,6 +149,10 @@ static void sd_select(struct savedir *sd, uint16_t vid, uint32_t did)
 
 /*!
  * @brief A saved name's kind as readdir() tells it
+ *
+ * @param[in] de  the name's directory entry
+ * @returns SD_DIR or SD_FILE by d_type, SD_UNKNOWN for a symlink, an
+ *          unknown type, or where readdir() gives no d_type
  */
 static char sd_kind(const struct dirent *de)
 {
@@ -203,6 +215,10 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
  * that no later batch stats it again, and leaves the folder's offspring
  * count.
  *
+ * @param[in]     vol     the listing's volume
+ * @param[in,out] name    the saved name, its kind byte after the NUL
+ * @param[in]     len     the name's length
+ * @param[out]    s_path  the name, its stat and its dircache entry
  * @returns 0 with s_path filled and its d_cached the name's entry or NULL,
  *          -1 for a name whose stat failed
  */

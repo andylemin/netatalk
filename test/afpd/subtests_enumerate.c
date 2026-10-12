@@ -785,3 +785,19 @@ out:
     return ret;
 #endif
 }
+
+/*!
+ * @brief On macOS, illumos and Solaris every volume that refuses symlinks
+ *        walks, so afp_openvol() holds the test volume's root
+ *
+ * @returns 0, 1 without the root, or TEST_SKIP where a volume may not walk
+ */
+int utest_movecwd_volume_walks(const struct vol *vol)
+{
+#if defined(__APPLE__) || defined(__sun)
+    return vol->v_rootfd >= 0 ? 0 : 1;
+#else
+    (void)vol;
+    return TEST_SKIP;
+#endif
+}
