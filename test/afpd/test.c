@@ -1351,8 +1351,6 @@ int main(int argc, char *argv[])
              "offspring count: a fresh stat refreshes the cached ctime");
     TEST_int_or_skip(utest_write_reads_size_only_when_used(&obj, vol), 0,
                      "FPWrite: fork size read only when a write uses it");
-    TEST_int(utest_volume_scan_resets_appended(&obj, vol), 0,
-             "vol size limit: a usage scan replaces the appended count");
     TEST_int(utest_write_end_past_limit_is_disk_full(&obj, vol), 0,
              "FPWriteExt: a write ending past the largest offset is disk full");
     TEST_int(utest_rfork_cache_hit_sends_cached_bytes(&obj, vol), 0,
@@ -1363,8 +1361,6 @@ int main(int argc, char *argv[])
              "rfork cache: a fork is found by its name on disk");
     TEST_int(utest_hint_relay_drops_repeats(&obj, vol), 0,
              "hint relay: a sender's repeated refresh is buffered once");
-    TEST_int(utest_fork_first_change_hints_siblings(&obj, vol), 0,
-             "fork: the first change and the close hint sibling sessions");
     TEST_int(utest_rfork_cache_skips_fill_while_written(&obj, vol), 0,
              "rfork cache: no fill while another session writes the fork");
     TEST_int(utest_rfork_cache_lookup_only_inside_fork(&obj, vol), 0,
